@@ -841,6 +841,56 @@ MatrixApiRequestData *matrix_api_typing(MatrixConnectionData *conn,
 }
 
 
+MatrixApiRequestData *matrix_api_presence(MatrixConnectionData *conn, gchar *presence, const gchar *status, 
+					  MatrixApiCallback callback, MatrixApiErrorCallback error_callback,
+					  MatrixApiBadResponseCallback bad_response_callback,
+					  gpointer user_data){
+   //Make PUT request for Presence
+
+   GString *url;
+   MatrixApiRequestData *fetch_data;
+   JsonNode *body_node;
+   JsonGenerator *generator;
+   gchar *json;
+   JsonObject *content;
+   
+   /* purple_url_encode uses a single static buffer, so we have to build up
+    * the url gradually
+    */
+   purple_debug_info("matrixprpl: API ", "presence for %s\n", conn->user_id);
+   url = g_string_new(conn->homeserver);
+   g_string_append(url, "_matrix/client/r0/presence/");
+   g_string_append(url, purple_url_encode(conn->user_id));
+   g_string_append(url, "/status");
+   g_string_append(url, "?access_token=");
+   g_string_append(url, purple_url_encode(conn->access_token));
+   
+   body_node = json_node_new(JSON_NODE_OBJECT);
+   content = json_object_new();
+   json_object_set_string_member(content, "presence", presence);
+   json_object_set_string_member(content, "status_msg", status);
+   
+   json_node_set_object(body_node, content);
+   
+   generator = json_generator_new();
+   json_generator_set_root(generator, body_node);
+   json = json_generator_to_data(generator, NULL);
+   g_object_unref(G_OBJECT(generator));
+   json_node_free(body_node);
+   
+   fetch_data = matrix_api_start(url->str, "PUT", json, conn, callback,
+				 error_callback, bad_response_callback,
+				 user_data, 0);
+   purple_debug_info("matrixprpl: ", "PRESENCE URL: %s\n", url->str);
+   purple_debug_info("matrixprpl:", "PRESENCE JSON: %s \n", json);
+   g_free(json);
+   g_string_free(url, TRUE);
+   json_object_unref(content);
+   
+   return fetch_data;    
+}
+
+
 MatrixApiRequestData *matrix_api_leave_room(MatrixConnectionData *conn,
         const gchar *room_id,
         MatrixApiCallback callback,

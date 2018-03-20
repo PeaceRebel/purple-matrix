@@ -77,6 +77,90 @@ static GList *matrixprpl_status_types(PurpleAccount *acct)
 }
 
 /**
+static void matrixprpl_set_status(PurpleAccount *account, PurpleStatus *status)
+{
+   PurpleConnection *gc = purple_account_get_connection(account);
+   MatrixConnectionData *conn;
+   const gchar *args[1];
+   const gchar *status_id = purple_status_get_id(status);
+
+   purple_debug_info("matrixprpl", "set_status");
+   g_return_if_fail(gc != NULL);
+   conn = (MatrixConnectionData *)(gc->proto_data);
+
+   if(!purple_status_is_active(status)){
+      return;
+   }
+   args[0] = NULL;
+
+   if(!g_strcmp0(status_id, "Offline")){
+      args[0] = purple_status_get_attr_string(status, "message");
+      if((args[0] == NULL) || (*args[0] == '\0'))
+	 args[0] =_("Offline");
+      matrix_api_presence(conn, "offline", args[0], NULL, NULL, NULL, NULL);    
+   }
+   else if(!g_strcmp0(status_id, "Online")){
+      matrix_api_presence(conn, "online", args[0], NULL, NULL, NULL, NULL);
+   }
+}
+
+**/
+
+static void matrixprpl_send_presence(PurpleAccount *account, PurpleStatus *status){
+
+   PurpleConnection *pc = purple_account_get_connection(account);
+   MatrixConnectionData *conn;
+   const gchar *args[1];
+   const gchar *status_id = purple_status_get_id(status);
+
+   purple_debug_info("matrixprpl", "set_status");
+   g_return_if_fail(pc != NULL);
+   conn = (MatrixConnectionData *)(pc->proto_data);
+
+   purple_debug_info("matrixprpl:", "set_status");
+   
+   if(!purple_status_is_active(status)){
+       purple_debug_info("matrixprpl: send_presence", "status not active for %s\n", conn->user_id);
+      return;
+   }
+   args[0] = NULL;
+
+   if(!g_strcmp0(status_id, "Offline")){
+      args[0] = purple_status_get_attr_string(status, "message");
+      if((args[0] == NULL) || (*args[0] == '\0'))
+	 args[0] =_("Offline");
+      matrix_api_presence(conn, "offline", args[0], NULL, NULL, NULL, NULL);    
+   }
+   else if(!g_strcmp0(status_id, "Online")){
+      matrix_api_presence(conn, "online", args[0], NULL, NULL, NULL, NULL);
+   }
+}
+
+
+
+static void matrixprpl_set_status(PurpleAccount *account, PurpleStatus *status) {
+
+   MatrixConnectionData *conn = NULL;
+   const gchar *status_id = purple_status_get_id(status);
+
+   purple_debug_info("matrixprpl:", "set_status");
+   
+   if(!purple_status_is_active(status)){
+      purple_debug_info("matrixprpl: set_status", "status not active for %s\n", conn->user_id);
+      return;
+   }
+
+   if(account->gc)
+      conn = account->gc->proto_data;
+
+   if(conn){
+      purple_prpl_got_account_status(account, status_id, NULL);
+      matrixprpl_send_presence(account, status);
+   } 
+}
+
+
+/**
  * handle sending typing notifications in a chat
  */
 static guint matrixprpl_conv_send_typing(PurpleConversation *conv, 
@@ -298,7 +382,7 @@ static PurplePluginProtocolInfo prpl_info =
     NULL,                                  /* set_info */
     NULL,                                  /* send_typing */
     NULL,                                  /* get_info */
-    NULL,                                  /* set_status */
+    matrixprpl_set_status,          /* set_status */
     NULL,                                  /* set_idle */
     NULL,                                  /* change_passwd */
     NULL,                                  /* add_buddy */

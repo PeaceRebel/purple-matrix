@@ -259,6 +259,27 @@ MatrixApiRequestData *matrix_api_typing(MatrixConnectionData *conn,
         MatrixApiBadResponseCallback bad_response_callback,
         gpointer user_data);
 
+/**
+ * Sends a presence event
+ *
+ * @param conn             The connection with which to make the request
+ * @param presence       The presence state
+ * @param status            Presence status messaage
+ * @param callback         Function to be called when the request completes
+ * @param error_callback   Function to be called if there is an error making
+ *                             the request. If NULL, matrix_api_error will be
+ *                             used.
+ * @param bad_response_callback Function to be called if the API gives a non-200
+ *                            response. If NULL, matrix_api_bad_response will be
+ *                            used.
+ * @param user_data        Opaque data to be passed to the callbacks
+*/
+MatrixApiRequestData *matrix_api_presence(MatrixConnectionData *conn, gchar *presence,
+					  const gchar *status, MatrixApiCallback callback,
+					  MatrixApiErrorCallback error_callback,
+					  MatrixApiBadResponseCallback bad_response_callback,
+					  gpointer user_data);
+
 
 /**
  * Leave a room

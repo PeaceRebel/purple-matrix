@@ -268,6 +268,24 @@ static void _on_typing(PurpleConversation *conv,
 }
 
 
+static void _on_presence(PurpleConversation *conv, MatrixRoomEvent *new_state)
+{
+   PurpleAccount *account = conv->account;
+   JsonObject *content = new_state->content;
+   const gchar *presence = json_object_get_string_member(content, "presence");
+   //const gchar *status_msg = json_object_get_string_member(content, "status_msg"); 
+   const gchar *status_id;
+   
+   if(!strcmp(presence,"Online"))
+      status_id = purple_primitive_get_id_from_type(PURPLE_STATUS_AVAILABLE);
+   else 
+      status_id = purple_primitive_get_id_from_type(PURPLE_STATUS_OFFLINE);
+   
+   //purple_prpl_got_account_status(account, status_id, NULL);
+   purple_prpl_got_user_status(account, conv->name, status_id, NULL);
+}
+
+
 /**
  * Called when there is a state update.
  *
@@ -302,6 +320,9 @@ static void _on_state_update(const gchar *event_type,
     }
     else if(strcmp(event_type, "m.room.topic") == 0) {
         _on_topic_change(conv, new_state);
+    }
+    else if(strcmp(event_type, "m.presence") == 0){
+       _on_presence(conv, new_state);
     }
 }
 

@@ -33,6 +33,7 @@
 #include "matrix-json.h"
 #include "matrix-sync.h"
 
+
 static void _start_next_sync(MatrixConnectionData *ma,
         const gchar *next_batch, gboolean full_state);
 
@@ -74,11 +75,13 @@ void matrix_connection_free(PurpleConnection *pc)
 void matrix_connection_cancel_sync(PurpleConnection *pc)
 {
     MatrixConnectionData *conn = purple_connection_get_protocol_data(pc);
-    g_assert(conn != NULL);
+                                                                         g_assert(conn != NULL);
     if(conn->active_sync) {
-        purple_debug_info("matrixprpl", "Cancelling active sync on %s\n",
-                pc->account->username);
-        matrix_api_cancel(conn->active_sync);
+            purple_debug_info("matrixprpl", "Cancelling active sync on %s\n",
+                                                   pc->account->username);
+            //matrix_api_presence(conn, "offline", "I willl be back", NULL, NULL, NULL, NULL);
+
+            matrix_api_cancel(conn->active_sync);
     }
     return;
 }
