@@ -79,8 +79,6 @@ void matrix_connection_cancel_sync(PurpleConnection *pc)
     if(conn->active_sync) {
             purple_debug_info("matrixprpl", "Cancelling active sync on %s\n",
                                                    pc->account->username);
-            //matrix_api_presence(conn, "offline", "I willl be back", NULL, NULL, NULL, NULL);
-
             matrix_api_cancel(conn->active_sync);
     }
     return;

@@ -90,6 +90,13 @@ void matrix_statetable_update(MatrixRoomStateEventTable *state_table,
         sender = "";
     }
 
+    if(g_strcmp0(event_type, "m.presence") == 0){
+       // Create a fake key to keep track of presence state
+       purple_debug_info("matrixprpl: STATETABLE_UPDATE","Got m.presence");
+       state_key = "presence";
+       sender = "";
+    }
+
     if(event_type == NULL || state_key == NULL || sender == NULL ||
             json_content_obj == NULL) {
         purple_debug_warning("matrixprpl", "event missing fields\n");

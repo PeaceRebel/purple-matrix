@@ -280,7 +280,8 @@ static void _on_presence(PurpleConversation *conv, MatrixRoomEvent *new_state)
       status_id = purple_primitive_get_id_from_type(PURPLE_STATUS_AVAILABLE);
    else 
       status_id = purple_primitive_get_id_from_type(PURPLE_STATUS_OFFLINE);
-   
+
+   purple_debug_info("matrixprpl", "_on_presence: presence= %s | status_id = %s\n", presence, status_id);
    //purple_prpl_got_account_status(account, status_id, NULL);
    purple_prpl_got_user_status(account, conv->name, status_id, NULL);
 }
@@ -322,6 +323,7 @@ static void _on_state_update(const gchar *event_type,
         _on_topic_change(conv, new_state);
     }
     else if(strcmp(event_type, "m.presence") == 0){
+       purple_debug_info("matrixprpl", "++++ Got m.presence ++++");
        _on_presence(conv, new_state);
     }
 }
