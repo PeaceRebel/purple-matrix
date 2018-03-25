@@ -65,46 +65,24 @@ static GList *matrixprpl_status_types(PurpleAccount *acct)
     GList *types = NULL;
     PurpleStatusType *type;
 
-    type = purple_status_type_new(PURPLE_STATUS_OFFLINE, "Offline", NULL,
-            TRUE);
+    //type = purple_status_type_new(PURPLE_STATUS_OFFLINE, "offline", NULL,TRUE);
+    type = purple_status_type_new_full(PURPLE_STATUS_OFFLINE, "offline", NULL,
+					     FALSE, FALSE, FALSE); //"message", _("I am offline."), purple_value_new(PURPLE_TYPE_STRING), NULL);
     types = g_list_prepend(types, type);
 
-    type = purple_status_type_new(PURPLE_STATUS_AVAILABLE, "Online", NULL,
-            TRUE);
+    type = purple_status_type_new_full(PURPLE_STATUS_AVAILABLE, "online", NULL,
+					     TRUE, TRUE, FALSE);//, "message", _("I am online."), purple_value_new(PURPLE_TYPE_STRING), NULL);
+    //type = purple_status_type_new(PURPLE_STATUS_AVAILABLE, "online", NULL, TRUE);
+    types = g_list_prepend(types, type);
+
+        type = purple_status_type_new_full(PURPLE_STATUS_UNAVAILABLE, "unavailable", NULL,
+						 FALSE, TRUE, FALSE); //, "message", _("I am currently unavailable"), purple_value_new(PURPLE_TYPE_STRING), NULL);
+    //type = purple_status_type_new(PURPLE_STATUS_UNAVAILABLE, "unavailable", NULL, TRUE);
     types = g_list_prepend(types, type);
 
     return types;
 }
 
-/**
-static void matrixprpl_set_status(PurpleAccount *account, PurpleStatus *status)
-{
-   PurpleConnection *gc = purple_account_get_connection(account);
-   MatrixConnectionData *conn;
-   const gchar *args[1];
-   const gchar *status_id = purple_status_get_id(status);
-
-   purple_debug_info("matrixprpl", "set_status");
-   g_return_if_fail(gc != NULL);
-   conn = (MatrixConnectionData *)(gc->proto_data);
-
-   if(!purple_status_is_active(status)){
-      return;
-   }
-   args[0] = NULL;
-
-   if(!g_strcmp0(status_id, "Offline")){
-      args[0] = purple_status_get_attr_string(status, "message");
-      if((args[0] == NULL) || (*args[0] == '\0'))
-	 args[0] =_("Offline");
-      matrix_api_presence(conn, "offline", args[0], NULL, NULL, NULL, NULL);    
-   }
-   else if(!g_strcmp0(status_id, "Online")){
-      matrix_api_presence(conn, "online", args[0], NULL, NULL, NULL, NULL);
-   }
-}
-
-**/
 
 static void matrixprpl_send_presence(PurpleAccount *account, PurpleStatus *status){
 
@@ -113,27 +91,18 @@ static void matrixprpl_send_presence(PurpleAccount *account, PurpleStatus *statu
    const gchar *args[1];
    const gchar *status_id = purple_status_get_id(status);
 
-   purple_debug_info("matrixprpl", "set_status");
    g_return_if_fail(pc != NULL);
    conn = (MatrixConnectionData *)(pc->proto_data);
-
-   purple_debug_info("matrixprpl:", "set_status");
    
    if(!purple_status_is_active(status)){
-       purple_debug_info("matrixprpl: send_presence", "status not active for %s\n", conn->user_id);
       return;
    }
    args[0] = NULL;
 
-   if(!g_strcmp0(status_id, "Offline")){
-      args[0] = purple_status_get_attr_string(status, "message");
-      if((args[0] == NULL) || (*args[0] == '\0'))
-	 args[0] =_("Offline");
-      matrix_api_presence(conn, "offline", args[0], NULL, NULL, NULL, NULL);    
-   }
-   else if(!g_strcmp0(status_id, "Online")){
-      matrix_api_presence(conn, "online", args[0], NULL, NULL, NULL, NULL);
-   }
+   args[0] = purple_status_get_attr_string(status, "message");
+   if((args[0] == NULL) || (*args[0] == '\0'))
+      args[0] =_("No message");
+   matrix_api_presence(conn, (gchar *) status_id, args[0], NULL, NULL, NULL, NULL);
 }
 
 
@@ -143,10 +112,8 @@ static void matrixprpl_set_status(PurpleAccount *account, PurpleStatus *status) 
    MatrixConnectionData *conn = NULL;
    const gchar *status_id = purple_status_get_id(status);
 
-   purple_debug_info("matrixprpl:", "set_status");
    
    if(!purple_status_is_active(status)){
-      purple_debug_info("matrixprpl: set_status", "status not active for %s\n", conn->user_id);
       return;
    }
 
@@ -156,6 +123,11 @@ static void matrixprpl_set_status(PurpleAccount *account, PurpleStatus *status) 
    if(conn){
       purple_prpl_got_account_status(account, status_id, NULL);
       matrixprpl_send_presence(account, status);
+
+      if(!g_strcmp0(status_id, "unavailable")){
+	 matrix_connection_cancel_sync(purple_account_get_connection(account));
+      }
+      
    } 
 }
 
